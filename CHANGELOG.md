@@ -27,8 +27,9 @@ First version, in three texture packages: 2K (2048 px atlas), 4K (4096 px) and 8
 - Hollow Lantern Ember enchantment, stronger on the battleaxe: fire damage on hit (18 / 26), a burn that does not
   stack (4 / 6 per second for 4 seconds), a 10-second soul trap and Lantern's Dread, which makes wounded targets
   (below 35 % health, up to level 35 / 45) flee for 8 / 10 seconds.
-- Hollow Lantern (light): a carved jack-o'-lantern on a corded bail, carried in the left hand like a torch, with a
-  flickering candle, flame and halo effects and a warm dynamic light that never burns out.
+- Hollow Lantern (light): a carved jack-o'-lantern hanging by a brass bail from a short cord-wrapped handle, held in
+  the left hand like a torch, with a flickering candle, flame and halo effects and a warm dynamic light that never
+  burns out.
 - BodySlide group "Hollow Lantern" with one project per body piece (all CBBE 3BA sliders, Build Morphs supported).
 - Forge recipes for every item (no perk needed), tempering for the corset, boots and gloves at the workbench and for
   the axes at the grindstone.

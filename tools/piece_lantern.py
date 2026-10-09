@@ -6,8 +6,13 @@ import numpy as np
 
 import hl_blend
 import hl_geom
+import piece_corset
 from hl_parts import Part
 
+SCALE = 2.0
+PLACE = np.array([0.1, -4.1, 1.0])
+HANDLE = (-3.3, 3.0)
+HANDLE_R = 1.3
 C = np.array([0.0, -5.3, 0.0])
 R = 2.75
 H = 2.2
@@ -217,18 +222,30 @@ def bail():
         dv, dt, duv, _ = hl_geom.sweep(np.array([c - [0, 0, sgn * 0.08], c + [0, 0, sgn * 0.12], c + [0, 0, sgn * 0.2]]),
                                        np.array([0.3, 0.27, 0.14]), 14, cap_end=True)
         parts.append((dv, dt, duv))
-    turns = 9
-    hel = []
-    for k in range(turns * 16 + 1):
-        a = -0.32 + 0.64 * k / (turns * 16)
-        centre = np.array([0.0, BAIL_Y + hy * np.cos(a), hz * np.sin(a)])
-        tang = hl_geom.normalize(np.array([0.0, -hy * np.sin(a), hz * np.cos(a)]))
-        nrm = np.array([1.0, 0.0, 0.0])
-        bnr = np.cross(tang, nrm)
-        w = 2 * np.pi * turns * k / (turns * 16)
-        hel.append(centre + (np.cos(w) * nrm + np.sin(w) * bnr) * 0.17)
-    cv, ct, cuv, _ = hl_geom.sweep(np.array(hel), np.full(len(hel), 0.075), 6)
-    return parts, (cv, ct, cuv)
+    return parts
+
+
+def handle():
+    x, z = PLACE[0], PLACE[2]
+    y0, y1 = HANDLE
+    axis = np.array([[x, y, z] for y in np.linspace(y0, y1, 10)])
+    wood = hl_geom.sweep(axis, np.full(len(axis), HANDLE_R), 20, cap_start=True, cap_end=True)[:3]
+    brass = [hl_geom.sweep(np.array([[x, ya, z], [x, yb, z]]), np.full(2, HANDLE_R + 0.1), 20, cap_start=True,
+                           cap_end=True)[:3] for ya, yb in ((y0 - 0.1, y0 + 0.4), (y1 - 0.4, y1 + 0.1))]
+    brass.append(piece_corset.torus(np.array([x, PLACE[1] + 0.2, z]), np.array([0.0, 0.0, 1.0]),
+                                    np.array([0.0, 1.0, 0.0]), 0.55, 0.13, seg_major=20, seg_minor=8))
+    turns = 7
+    n = turns * 16 + 1
+    w = np.linspace(0, 2 * np.pi * turns, n)
+    r = HANDLE_R + 0.03
+    hel = np.stack([x + np.cos(w) * r, np.linspace(y0 + 0.6, y1 - 0.6, n), z + np.sin(w) * r], 1)
+    cord = hl_geom.sweep(hel, np.full(n, 0.09), 6)[:3]
+
+    def unplace(mesh):
+        v, t, uv = mesh
+        return (np.asarray(v) - PLACE) / SCALE, t, uv
+
+    return unplace(wood), [unplace(m) for m in brass], unplace(cord)
 
 
 def candle():
@@ -301,10 +318,13 @@ def build(body=None, proxy=None, log=print):
         parts.append(Part(name, shape, v, t, uv, isl, mat))
     sv, st, suv = stem()
     parts.append(Part("lantern_stem", "Lantern", sv, st, suv, "patch:stem", "stem"))
-    bparts, cord = bail()
-    for k, (v, t, uv) in enumerate(bparts):
+    for k, (v, t, uv) in enumerate(bail()):
         parts.append(Part("lantern_bail%d" % k, "LanternBrass", v, t, uv, "patch:brass", "brass"))
-    parts.append(Part("lantern_grip", "Lantern", cord[0], cord[1], cord[2], "patch:cord", "cord"))
+    wood, fittings, cord = handle()
+    parts.append(Part("lantern_handle", "Lantern", *wood, "patch:ebony", "wood"))
+    for k, (v, t, uv) in enumerate(fittings):
+        parts.append(Part("lantern_fitting%d" % k, "LanternBrass", v, t, uv, "patch:brass", "brass"))
+    parts.append(Part("lantern_grip", "Lantern", *cord, "patch:cord", "cord"))
     (cv, ct, cuv), (wv, wt, wuv), flame_base = candle()
     parts.append(Part("lantern_candle", "LanternGlow", cv, ct, cuv, "patch:wax", "wax"))
     parts.append(Part("lantern_wick", "Lantern", wv, wt, wuv, "patch:edge", "edge"))
@@ -313,5 +333,5 @@ def build(body=None, proxy=None, log=print):
         p.bones = []
         p.sliders = []
     fx = {"flame": flame_cards(flame_base - np.array([0.0, 0.42, 0.0])), "halo": halo(flame_base, 1.15),
-          "light": flame_base + np.array([0.0, 0.1, 0.0])}
+          "light": flame_base + np.array([0.0, 0.1, 0.0]), "scale": SCALE, "offset": PLACE}
     return parts, fx

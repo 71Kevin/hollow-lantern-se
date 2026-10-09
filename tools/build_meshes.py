@@ -236,11 +236,15 @@ def write_lantern(path, parts, fx, template_torch, template_gourd):
     nif.initialize("SKYRIMSE", path, root_type="BSFadeNode", root_name="HollowLantern")
     root = nif.root
     rigid.copy_root_extra_data(torch.root, nif, root, bsx_flags=195)
+
+    def place(v):
+        return np.asarray(v) * fx["scale"] + fx["offset"]
+
     groups = []
     for name, group in group_by_shape(parts):
         data = hl_export.merge_parts(group)
         key = "brass" if name.endswith("Brass") else ("glow" if name.endswith("Glow") else "cloth")
-        groups.append((name, {"v": data["v"], "t": data["t"], "uv": data["uv"], "n": data["n"]}, key, None))
+        groups.append((name, {"v": place(data["v"]), "t": data["t"], "uv": data["uv"], "n": data["n"]}, key, None))
     shapes = hl_export.static_shapes(nif, groups, parent=root)
     flicker = FLICKER
     glow_shape = [s for s, g in zip(shapes, groups) if g[0].endswith("Glow")][0]
@@ -249,19 +253,19 @@ def write_lantern(path, parts, fx, template_torch, template_gourd):
                    falloffStopOpacity=0.0, textureClampMode=3, UV_Scale_U=1.0, UV_Scale_V=1.0, UV_Offset_U=0.0,
                    UV_Offset_V=0.0, LightingInfluence=255)
     fv, ft, fuv, fn, fc = fx["flame"]
-    flame = rigid.add_effect_shape(nif, root, "LanternFlame", fv, ft, fuv, fn, fc,
+    flame = rigid.add_effect_shape(nif, root, "LanternFlame", place(fv), ft, fuv, fn, fc,
                                    dict(base_fx, Shader_Flags_1=0xC0000048, Emissive_Color=(1.0, 0.62, 0.22, 1.0),
                                         Emissive_Mult=2.4, softFalloffDepth=1.0),
                                    {"Diffuse": r"textures\effects\candleflame01.dds"})
     rigid.add_effect_float_controllers(nif, flame, [(0, [(t, 2.4 * f) for t, f in flicker])])
     hv, ht, huv, hn, hc = fx["halo"]
-    halo = rigid.add_effect_shape(nif, root, "LanternHalo", hv, ht, huv, hn, hc,
+    halo = rigid.add_effect_shape(nif, root, "LanternHalo", place(hv), ht, huv, hn, hc,
                                   dict(base_fx, Shader_Flags_1=0xC0000048, Emissive_Color=(1.0, 0.5, 0.14, 1.0),
                                        Emissive_Mult=0.9, softFalloffDepth=1.5, textureClampMode=0),
                                   {"Diffuse": r"textures\effects\GlowSoft01.dds"})
     rigid.add_effect_float_controllers(nif, halo, [(0, [(t, 0.9 * f) for t, f in flicker])])
     light = np.eye(4)
-    light[:3, 3] = fx["light"]
+    light[:3, 3] = place(fx["light"])
     nif.add_node("AttachLight", hl_nif.mat_to_xf(light), root)
     pts = np.concatenate([g[1]["v"] for g in groups])
     cal = rigid.inertia_calibration(gourd.root.collision_object.body)
