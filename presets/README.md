@@ -5,7 +5,8 @@ Five BodySlide presets for **CBBE 3BA** by **Tinesh**, made to wear the
 does not need them and they do not need the outfit.
 
 **Download:** `Hollow-Lantern-Body-Presets-CBBE-3BA-1.0.7z` from the
-[latest release](https://github.com/71Kevin/hollow-lantern-se/releases/latest).
+[latest release](https://github.com/71Kevin/hollow-lantern-se/releases/latest), or as an optional file on the
+[Nexus Mods page](https://www.nexusmods.com/skyrimspecialedition/mods/194674?tab=files).
 
 ## Presets
 

@@ -9,7 +9,8 @@ with it.
 ![Hollow Lantern: masquerade mask, horns, choker and gloves](docs/images/hollow-lantern.jpg)
 
 **[Download the latest release](https://github.com/71Kevin/hollow-lantern-se/releases/latest)**: 2K, 4K and 8K
-packages and the optional body presets, see [Downloads](#downloads).
+packages and the optional body presets, see [Downloads](#downloads). Also on
+[Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/194674).
 
 ## Features
 
@@ -64,7 +65,7 @@ amount of detail. All textures are BC7 with full mipmaps.
 | Page | Hollow Lantern | Hollow Lantern Body Presets |
 |---|---|---|
 | GitHub | [Releases](https://github.com/71Kevin/hollow-lantern-se/releases) | [Releases](https://github.com/71Kevin/hollow-lantern-se/releases) (same release) |
-| Nexus Mods | Coming soon | Coming soon |
+| Nexus Mods | [Tinesh's Hollow Lantern](https://www.nexusmods.com/skyrimspecialedition/mods/194674) | [Same page](https://www.nexusmods.com/skyrimspecialedition/mods/194674?tab=files) (optional file) |
 | Dwemer Mods | Coming soon | Coming soon |
 
 ## Requirements
