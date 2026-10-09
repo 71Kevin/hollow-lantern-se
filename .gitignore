@@ -1,0 +1,10 @@
+out/
+cache/
+dist/
+presets/out/
+
+plugin/bin/
+plugin/obj/
+
+__pycache__/
+*.pyc
