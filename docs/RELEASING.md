@@ -8,13 +8,14 @@
    `Hollow Lantern - CBBE 3BA (<res>) - <version>.7z` and `Hollow Lantern Body Presets - CBBE 3BA - <version>.7z`.
 4. **Check the packages.**
    - `7z t` passes on every archive.
-   - The outfit archives hold the plugin, `meshes`, `textures` and `CalienteTools` at the root (no `Data` folder
-     level); the presets archive holds only `CalienteTools\BodySlide\SliderPresets\Hollow Lantern Presets.xml`.
+   - The outfit archives hold the plugin, `meshes`, `textures`, `CalienteTools`, `Scripts` and `Source` at the root
+     (no `Data` folder level), and the `.pex` header carries no user or computer name; the presets archive holds only `CalienteTools\BodySlide\SliderPresets\Hollow Lantern Presets.xml`.
    - The three outfit packages share the same plugin, meshes and BodySlide files; only the textures differ.
    - DDS headers: BC7 with full mip chains; diffuse and normal map 2048 px (2K), 4096 px (4K) and 8192 px (8K), glow
      map and reflection mask a quarter of that.
    - Install a package in Mod Organizer 2, run BodySlide Batch Build for the group Hollow Lantern and test in game:
-     every item in third and first person, the tail physics, the axe enchantment, the recipes.
+     every item in third and first person, the tail physics, the axe enchantment, the recipes (the lantern turns
+     into the carried light when crafted).
 5. **Release assets.** Copy the tested packages to `dist\` as `Hollow-Lantern-CBBE-3BA-<res>-<version>.7z` and
    `Hollow-Lantern-Body-Presets-CBBE-3BA-<version>.7z` (GitHub turns spaces and brackets in asset names into dots),
    and note their SHA-256 (`Get-FileHash`).

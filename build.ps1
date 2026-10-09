@@ -72,6 +72,16 @@ if (-not $SkipTextures) {
 $missing = $resolutions | Where-Object { -not (Test-Path (Join-Path $textureSets $_)) }
 if ($missing) { throw "Texture sets not found: $($missing -join ', ')" }
 
+$scriptSource = Join-Path $data "Source\Scripts"
+$scriptOut = Join-Path $data "Scripts"
+New-Item -ItemType Directory -Force $scriptSource, $scriptOut | Out-Null
+Copy-Item "$PSScriptRoot\scripts\*.psc" $scriptSource
+& "$Game\Papyrus Compiler\PapyrusCompiler.exe" "$scriptSource\HollowLanternCraftScript.psc" `
+    -f="$Game\Data\Source\Scripts\TESV_Papyrus_Flags.flg" -i="$scriptSource;$Game\Data\Scripts\Source;$Game\Data\Source\Scripts" `
+    -o="$scriptOut" -op -q
+if ($LASTEXITCODE) { throw "Papyrus compilation failed" }
+python "$tools\pex_anonymize.py" "$scriptOut\HollowLanternCraftScript.pex"
+
 dotnet run -c Release --project "$PSScriptRoot\plugin" -- "$Game\Data\Skyrim.esm" $data $report
 if ($LASTEXITCODE) { throw "Plugin generation failed" }
 

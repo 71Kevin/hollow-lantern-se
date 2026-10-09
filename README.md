@@ -78,7 +78,8 @@ amount of detail. All textures are BC7 with full mipmaps.
   and for BodyMorph, and [FSMP - Faster HDT-SMP](https://www.nexusmods.com/skyrimspecialedition/mods/57339) for the
   tail physics (without it the tail hangs still).
 
-No DLC is needed. The plugin has no scripts of its own and does not need SKSE; CBBE 3BA, RaceMenu and FSMP do.
+No DLC is needed. The plugin itself does not need SKSE (its one script uses only vanilla functions); CBBE 3BA,
+RaceMenu and FSMP do.
 
 ## Installation
 
@@ -92,7 +93,8 @@ No DLC is needed. The plugin has no scripts of its own and does not need SKSE; C
 3. Enable `[Tinesh] Hollow Lantern.esp`. It is ESL-flagged and only adds new records, so its place in the load order
    does not matter.
 
-The archive holds the `Data` folder's contents (plugin, `meshes`, `textures`, `CalienteTools`), so mod managers
+The archive holds the `Data` folder's contents (plugin, `meshes`, `textures`, `CalienteTools`, `Scripts` and the
+script source in `Source`), so mod managers
 install it without asking for a data folder. To switch texture packages, uninstall one and install the other, then
 run Batch Build again.
 
@@ -116,6 +118,10 @@ Base values; the inventory shows them with your perks applied. The corset, boots
 workbench with 1 Leather Strips and the axes at a grindstone with 1 Steel Ingot (enchanted items need the Arcane
 Blacksmith perk, as usual). The choker takes necklace enchantments and the horns circlet enchantments. Console:
 `help "hollow lantern" 4`, then `player.additem <ID> 1`.
+
+Crafting menus cannot list light sources, so the forge makes the Hollow Lantern as an item that turns into the carried
+light as soon as it reaches your inventory (or any container). Item spawners that list only regular items show this
+version too.
 
 ### Enchantment: Hollow Lantern Ember
 
@@ -192,7 +198,7 @@ packages and `presets\build.ps1` the body presets.
    Poly Head). Their folder names are set at the top of `tools/extract_refs.py`, `tools/hl_face.py` and
    `tools/piece_horns.py`.
 2. Install the tools: Blender 4.3 with PyNifly, Python 3 with NumPy, OpenCV and lz4, texconv (DirectXTex), the .NET 9
-   SDK and 7-Zip.
+   SDK, 7-Zip and the Creation Kit (for the Papyrus compiler).
 3. Run the builds from PowerShell:
 
    ```powershell
@@ -206,14 +212,15 @@ packages and `presets\build.ps1` the body presets.
 
 | Path | Contents |
 |---|---|
-| `build.ps1` | One-command build: references, meshes, textures, plugin and packages |
+| `build.ps1` | One-command build: references, meshes, textures, script, plugin and packages |
 | `tools/build_meshes.py` | Meshes, BodySlide projects, tail physics and ground models (Blender + PyNifly) |
 | `tools/piece_*.py` | One script per item |
 | `tools/hl_*.py` | Shared helpers: fitting, slider data, BodySlide files, NIF export, texture atlas, head morphs |
 | `tools/make_textures.py` | Texture atlas painting and the three BC7 texture sets |
 | `tools/extract_refs.py` | Reads the CBBE 3BA reference body, hands, feet, sliders and skeleton |
-| `tools/lib/` | NIF helpers for static meshes and collision, BSA reader |
+| `tools/lib/` | NIF helpers for static meshes and collision, BSA reader, `.pex` cleanup |
 | `plugin/` | Plugin generator (C#, Mutagen) |
+| `scripts/` | Papyrus source of the lantern crafting script |
 | `presets/` | Body presets: fitting script, build and README |
 | `docs/` | Screenshot and the release checklist |
 
@@ -224,7 +231,7 @@ packages and `presets\build.ps1` the body presets.
   BodySlide sliders.
 - **Bethesda Game Studios**: the vanilla effects, cubemaps, first-person body and soul trap script the items use
   (referenced, not included).
-- Tools: Blender, PyNifly, Mutagen, DirectXTex, 7-Zip.
+- Tools: Blender, PyNifly, Mutagen, DirectXTex, the Papyrus Compiler from the Creation Kit, 7-Zip.
 
 ## Support My Work
 

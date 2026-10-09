@@ -34,6 +34,9 @@ First version, in three texture packages: 2K (2048 px atlas), 4K (4096 px) and 8
   the axes at the grindstone.
 
 ### Fixed during testing (before release)
+- The Hollow Lantern can be crafted at the forge and found by item spawners: crafting menus cannot list light
+  sources, so the recipe makes a lantern item that a small script turns into the carried light as soon as it reaches
+  an inventory or container.
 - Equipping the tail no longer collapses the upper body: its collision shapes only use body bones, all declared as
   fixed in the physics file.
 - Inventory previews, dropped items and the carried lantern are visible (static meshes no longer carry the skinned

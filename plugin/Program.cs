@@ -193,7 +193,33 @@ lantern.Sound.Clear();
 lantern.Weight = 1.5f;
 lantern.Value = 35;
 mod.Lights.Add(lantern);
-Recipe(0x827, "RecipeHollowLanternLight", lantern.FormKey, forge, new[] { (gourd, 1), (thorax, 1), (iron, 1) });
+var lanternToken = new MiscItem(Mine(0x850), release)
+{
+    EditorID = "HollowLanternToken",
+    Name = "Hollow Lantern",
+    Model = new Model { File = meshDir + "lantern.nif" },
+    ObjectBounds = lantern.ObjectBounds,
+    Weight = lantern.Weight,
+    Value = lantern.Value,
+};
+lanternToken.VirtualMachineAdapter = new VirtualMachineAdapter
+{
+    Scripts =
+    {
+        new ScriptEntry
+        {
+            Name = "HollowLanternCraftScript",
+            Flags = ScriptEntry.Flag.Local,
+            Properties =
+            {
+                new ScriptObjectProperty { Name = "HollowLantern", Flags = ScriptProperty.Flag.Edited, Object = lantern.ToLink<ISkyrimMajorRecordGetter>() },
+                new ScriptObjectProperty { Name = "HollowLanternToken", Flags = ScriptProperty.Flag.Edited, Object = lanternToken.ToLink<ISkyrimMajorRecordGetter>() },
+            },
+        },
+    },
+};
+mod.MiscItems.Add(lanternToken);
+Recipe(0x827, "RecipeHollowLanternLight", lanternToken.FormKey, forge, new[] { (gourd, 1), (thorax, 1), (iron, 1) });
 
 var steel = Ingredient("IngotSteel");
 var fireSalts = Ingredient("FireSalts");
@@ -305,7 +331,7 @@ foreach (var w in weapons)
     Temper(w.TemperId, w.EditorName, weapon.FormKey, sharpeningWheel, steel);
 }
 
-mod.ModHeader.Stats.NextFormID = 0x850;
+mod.ModHeader.Stats.NextFormID = 0x851;
 
 Directory.CreateDirectory(outDir);
 var outPath = Path.Combine(outDir, modKey.FileName);
@@ -330,5 +356,7 @@ foreach (var s in back.EffectShaders)
     Console.WriteLine($"  EFSH {s.FormKey.ID:X3} {s.EditorID}: palette={s.MembranePaletteTexture} edge={s.EdgeEffectColor}");
 foreach (var l in back.Lights)
     Console.WriteLine($"  LIGH {l.FormKey.ID:X3} {l.EditorID}: '{l.Name?.String}' model={l.Model?.File} radius={l.Radius} color={l.Color} time={l.Time} flags={l.Flags} fade={l.FadeValue} W={l.Weight} V={l.Value} bounds={l.ObjectBounds.First}/{l.ObjectBounds.Second}");
+foreach (var m in back.MiscItems)
+    Console.WriteLine($"  MISC {m.FormKey.ID:X3} {m.EditorID}: '{m.Name?.String}' model={m.Model?.File} W={m.Weight} V={m.Value} script={string.Join(",", m.VirtualMachineAdapter!.Scripts.Select(s => $"{s.Name}({string.Join(",", s.Properties.OfType<IScriptObjectPropertyGetter>().Select(p => $"{p.Name}={p.Object.FormKey.ID:X3}"))})"))}");
 foreach (var c in back.ConstructibleObjects)
-    Console.WriteLine($"  COBJ {c.FormKey.ID:X3} {c.EditorID}: bench={c.WorkbenchKeyword.FormKey} items={string.Join("+", c.Items!.Select(i => $"{i.Item.Count}x{i.Item.Item.FormKey.ID:X6}"))} conditions={c.Conditions.Count}");
+    Console.WriteLine($"  COBJ {c.FormKey.ID:X3} {c.EditorID}: creates={c.CreatedObject.FormKey.ID:X3} bench={c.WorkbenchKeyword.FormKey} items={string.Join("+", c.Items!.Select(i => $"{i.Item.Count}x{i.Item.Item.FormKey.ID:X6}"))} conditions={c.Conditions.Count}");
