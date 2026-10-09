@@ -10,7 +10,8 @@ with it.
 
 **[Download the latest release](https://github.com/71Kevin/hollow-lantern-se/releases/latest)**: 2K, 4K and 8K
 packages and the optional body presets, see [Downloads](#downloads). Also on
-[Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/194674).
+[Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/194674) and
+[Dwemer Mods](https://dwemermods.com/mods/4993).
 
 ## Features
 
@@ -66,7 +67,7 @@ amount of detail. All textures are BC7 with full mipmaps.
 |---|---|---|
 | GitHub | [Releases](https://github.com/71Kevin/hollow-lantern-se/releases) | [Releases](https://github.com/71Kevin/hollow-lantern-se/releases) (same release) |
 | Nexus Mods | [Tinesh's Hollow Lantern](https://www.nexusmods.com/skyrimspecialedition/mods/194674) | [Same page](https://www.nexusmods.com/skyrimspecialedition/mods/194674?tab=files) (optional file) |
-| Dwemer Mods | Coming soon | Coming soon |
+| Dwemer Mods | [Tinesh's Hollow Lantern](https://dwemermods.com/mods/4993) | [Same page](https://dwemermods.com/mods/4993) |
 
 ## Requirements
 
