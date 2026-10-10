@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1 — 2026-10-10
+
+### Fixed
+- Boots: the leg no longer pinches inwards above the ankle. The foot of the boot sat upright and to the outside of the
+  ankle while the shaft followed the slanted shin, so the boot bent sharply at the third row of eyelets from the
+  bottom; it now runs in one smooth line from the calf into the foot.
+- Boots: the lacing runs in a straight line all the way down to the instep.
+- Boots: the lower boot bends at the ankle, like the leg under it, instead of above it, so the lacing keeps its shape
+  when crouching, sitting or walking. The weights around the ankle now follow the CBBE feet.
+- Boots: BodySlide sliders now reach the whole shaft down to the ankle (AnkleSize included), not only from the third
+  row of eyelets up.
+- Boots: the orange stitching along the front seam, above the lacing, runs straight instead of bending at the knee.
+
 ## 1.0 — 2026-10-09
 
 First version, in three texture packages: 2K (2048 px atlas), 4K (4096 px) and 8K (8192 px).

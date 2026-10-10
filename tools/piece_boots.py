@@ -46,6 +46,14 @@ HEEL = [(1.0, -3.85, -0.65, 1.75), (-0.5, -3.55, -0.95, 1.45), (-2.0, -3.05, -1.
 LACE_TOP = 27.0
 LACE_GAP = 0.42
 EYELET_STEP = 2.15
+ANKLE_SPAN = (2.0, 17.0)
+ANKLE_TURN = 6.5
+SOLE_HOLD = (1.5, 4.5)
+SEAM_FRONT = 6.0
+SEAM_BACK = 2.0
+SEAM_TOP = 48.5
+SEAM_SIGMA = 2.5
+SEAM_KNEE = 33.5
 
 
 def leg_centers(body, zs, side=-1):
@@ -264,11 +272,130 @@ def dist_to_polyline(p, line):
     return best
 
 
-def foot_blend(v, w, D, foot_bone):
-    k = np.clip((v[:, 2] - 8.0) / 4.5, 0, 1)
+class AnkleBlend:
+    def __init__(self, feet_ref, side):
+        sh = feet_ref["shapes"]["Feet"]
+        pre = "NPC L" if side < 0 else "NPC R"
+        legs = [j for j, b in enumerate(sh["bones"]) if b.startswith(pre)]
+        calf = [j for j in legs if "Calf" in sh["bones"][j]]
+        tris = sh["t"][np.sign(sh["v"][sh["t"]][:, :, 0].mean(1)) == side]
+        self.v, self.t = sh["v"], tris
+        self.tree = hl_blend.bvh(sh["v"], tris)
+        self.share = sh["w"][:, calf].sum(1) / np.maximum(sh["w"][:, legs].sum(1), 1e-9)
+        top = np.unique(tris)
+        self.z_top = sh["v"][top, 2].max()
+        top = top[sh["v"][top, 2] > self.z_top - 0.6]
+        self.seam = self.share[top].mean()
+
+    def __call__(self, points):
+        loc, nrm, face, dist = hl_blend.nearest(self.tree, points)
+        tri = self.t[face]
+        bc = hl_blend.barycentric(loc, self.v[tri[:, 0]], self.v[tri[:, 1]], self.v[tri[:, 2]])
+        z = np.asarray(points)[:, 2]
+        hold = np.clip((z - SOLE_HOLD[0]) / (SOLE_HOLD[1] - SOLE_HOLD[0]), 0, 1)
+        rise = np.clip((z - self.z_top + 0.5) / 2.0, 0, 1)
+        k = np.clip((bc * self.share[tri]).sum(1) / self.seam, 0, 1) * hold * hold * (3 - 2 * hold)
+        return np.maximum(k, rise * rise * (3 - 2 * rise))
+
+
+def foot_blend(v, w, D, foot_bone, ankle):
+    k = ankle(v)
     wf = np.zeros_like(w)
     wf[:, foot_bone] = 1.0
     return w * k[:, None] + wf * (1 - k)[:, None], D * k[:, None, None]
+
+
+def section_centres(v, t, zs, axes):
+    a, b, c = v[t[:, 0]], v[t[:, 1]], v[t[:, 2]]
+    out = np.zeros((len(zs), len(axes)))
+    for i, z in enumerate(zs):
+        pts = []
+        for p, q in ((a, b), (b, c), (c, a)):
+            s = (p[:, 2] - z) * (q[:, 2] - z) < 0
+            f = (z - p[s, 2]) / (q[s, 2] - p[s, 2])
+            pts.append(p[s, :2] + (q[s, :2] - p[s, :2]) * f[:, None])
+        x = np.concatenate(pts) @ np.array(axes).T
+        out[i] = 0.5 * (x.min(0) + x.max(0))
+    return out
+
+
+def faired_offset(zs, c):
+    z0, z1 = zs[0], zs[-1]
+    slope = np.polyfit(zs[-6:], c[-6:], 1)[0]
+    line = c[-1] + slope * (zs - z1)
+    end = c[-1] + slope * (ANKLE_TURN - z1)
+    s = np.clip((zs - z0) / (ANKLE_TURN - z0), 0, 1)
+    turn = (2 * s ** 3 - 3 * s ** 2 + 1) * c[0] + (3 * s ** 2 - 2 * s ** 3) * end + (s ** 3 - s ** 2) * (
+        ANKLE_TURN - z0) * slope
+    delta = np.where(zs < ANKLE_TURN, turn, line) - c
+    for _ in range(4):
+        delta[1:-1] = 0.25 * delta[:-2] + 0.5 * delta[1:-1] + 0.25 * delta[2:]
+    return delta
+
+
+def smooth_line(z, y, sigma):
+    h = z[1] - z[0]
+    n = int(4 * sigma / h)
+    k = np.exp(-0.5 * (np.arange(-n, n + 1) * h / sigma) ** 2)
+    lo, hi = np.polyfit(z[:8], y[:8], 1), np.polyfit(z[-8:], y[-8:], 1)
+    ext = np.concatenate([np.polyval(lo, z[0] - h * np.arange(n, 0, -1)), y,
+                          np.polyval(hi, z[-1] + h * np.arange(1, n + 1))])
+    return np.convolve(ext, k / k.sum(), mode="valid")
+
+
+def straight_seam(z, x):
+    A = np.stack([np.ones_like(z), z, np.maximum(z - SEAM_KNEE, 0)], 1)
+    return smooth_line(z, A @ np.linalg.lstsq(A, x, rcond=None)[0], SEAM_SIGMA)
+
+
+def column_lat(grid, col, zs, lat):
+    c = grid[:, col]
+    order = np.argsort(c[:, 2])
+    return np.interp(zs, c[order, 2], c[order, :2] @ lat)
+
+
+def ankle_shift(v, t, grid, sd_):
+    zs = np.linspace(ANKLE_SPAN[0], ANKLE_SPAN[1], 53)
+    lat = np.array([sd_.lat[0], sd_.lat[1]])
+    fwd = np.array([sd_.fwd[0], sd_.fwd[1]])
+    centre = section_centres(v, t, zs, (lat, fwd))
+    d_side = faired_offset(zs, centre[:, 0])
+    d_front = faired_offset(zs, column_lat(grid, 0, zs, lat))
+    lat3 = np.array([lat[0], lat[1], 0.0])
+
+    def shift(p):
+        p = np.array(p, dtype=np.float64)
+        z = p[:, 2]
+        dl = p[:, :2] @ lat - np.interp(z, zs, centre[:, 0])
+        df = p[:, :2] @ fwd - np.interp(z, zs, centre[:, 1])
+        k = np.clip(df / np.maximum(np.hypot(dl, df), 1e-9), 0, 1) ** 2
+        d = np.interp(z, zs, d_side) * (1 - k) + np.interp(z, zs, d_front) * k
+        return p + d[:, None] * lat3
+    return shift
+
+
+def seam_shift(grid, sd_, proxy, ankle):
+    fwd = np.array([sd_.fwd[0], sd_.fwd[1]])
+    curves = []
+    for col, z0 in ((0, SEAM_FRONT), (grid.shape[1] // 2, SEAM_BACK)):
+        c = ankle(grid[:, col])
+        order = np.argsort(c[:, 2])
+        zz = np.linspace(z0, SEAM_TOP, int(round((SEAM_TOP - z0) / 0.25)) + 1)
+        x = np.interp(zz, c[order, 2], c[order, 0])
+        ramp = np.clip((zz - z0) / 3.0, 0, 1)
+        curves.append((zz, (straight_seam(zz, x) - x) * ramp * ramp * (3 - 2 * ramp)))
+    zl = np.linspace(SEAM_BACK, SEAM_TOP, int(round((SEAM_TOP - SEAM_BACK) / 0.25)) + 1)
+    centres = leg_centers(proxy, zl, sd_.side)
+
+    def shift(p):
+        p = np.array(p, dtype=np.float64)
+        z = p[:, 2]
+        rel = p[:, :2] - np.stack([np.interp(z, zl, centres[:, 0]), np.interp(z, zl, centres[:, 1])], 1)
+        c = rel @ fwd / np.maximum(np.linalg.norm(rel, axis=1), 1e-9)
+        p[:, 0] += (np.clip(c, 0, 1) ** 4 * np.interp(z, *curves[0]) +
+                    np.clip(-c, 0, 1) ** 4 * np.interp(z, *curves[1]))
+        return p
+    return shift
 
 
 BACK_RAIL = [(-2.75, 14.0), (-3.25, 11.0), (-3.75, 7.2), (-3.85, 4.2), (-3.65, 2.2), (-3.1, 1.15), (-1.8, 0.92),
@@ -396,13 +523,15 @@ def boot_surface(proxy, sd_, segs=72):
     return v, t_all, attrs, path, along, prof, grid
 
 
-def build_side(body, proxy, side, log, t0):
+def build_side(body, proxy, feet_ref, side, log, t0):
     import time
     sd_ = Side(side)
     v, t, a, path, along, prof, grid = boot_surface(proxy, sd_)
     log("%s surface %d verts %.1fs" % (sd_.tag, len(v), time.time() - t0))
     zc = v[:, 2]
     v, t, a = hl_geom.iso_cut(v, t, top_curve(a["phi"]) - zc, a)
+    shift = ankle_shift(v, t, grid, sd_)
+    seam = seam_shift(grid, sd_, proxy, shift)
     zk = along[np.argmin(np.abs(grid[:, 0, 2] - 27.0))]
     s_end = along[np.argmin(np.abs(grid[:, 0, 2] - 6.0))]
     ds = np.clip(a["s"], zk, s_end) - a["s"]
@@ -410,13 +539,26 @@ def build_side(body, proxy, side, log, t0):
     tv, tt, ta = hl_geom.iso_cut(v, t, 1.2 - d_lace, {})
     tn = hl_geom.vertex_normals(tv, tt)
     tv = tv - tn * 0.13
+    tuv = hl_blend.unwrap(tv, tt)
+    def settle(p):
+        before = shift(p)
+        out = seam(before)
+        s = (out[:, 2] > 12.6) & (np.linalg.norm(out - before, axis=1) > 1e-9)
+        d0 = proxy.signed_distance(before[s])[0]
+        d1, loc, nrm, _ = proxy.signed_distance(out[s])
+        out[s] += hl_geom.normalize(out[s] - loc) * (d0 - d1)[:, None]
+        return out
+
+    tv = settle(tv)
     sel = (along >= zk) & (along <= s_end)
-    line = grid[sel, 0, :]
+    line = settle(grid[sel, 0, :])
     v, t, a = hl_geom.iso_cut(v, t, d_lace - LACE_GAP, dict(a, dl=d_lace))
+    v = settle(v)
     log("%s cuts %.1fs" % (sd_.tag, time.time() - t0))
     foot_bone = proxy.bones.index(sd_.foot)
+    ankle = AnkleBlend(feet_ref, side)
     w, D = bind(v, t, proxy, smooth_iters=3, edge_body=body)
-    w, D = foot_blend(v, w, D, foot_bone)
+    w, D = foot_blend(v, w, D, foot_bone, ankle)
     tag = sd_.tag
 
     def halves(outer):
@@ -435,9 +577,8 @@ def build_side(body, proxy, side, log, t0):
                         ("boot" + tag, "patch:lining", "patch:edge"), ("leather", "lining", "edge"), rim_segments=2,
                         attrs={"phi": a["phi"], "arc": a["arc"], "s": a["s"]}, split_outer=halves)
     tw, tD = bind(tv, tt, proxy, smooth_iters=2)
-    tw, tD = foot_blend(tv, tw, tD, foot_bone)
-    parts.append(Part("tongue" + sd_.tag, "Boots", tv, tt, hl_blend.unwrap(tv, tt), "tongue" + sd_.tag, "fabric",
-                      tw, tD))
+    tw, tD = foot_blend(tv, tw, tD, foot_bone, ankle)
+    parts.append(Part("tongue" + sd_.tag, "Boots", tv, tt, tuv, "tongue" + sd_.tag, "fabric", tw, tD))
     log("%s upper %.1fs" % (sd_.tag, time.time() - t0))
     ov, ot, ouv = sole(prof, sd_)
     hv, ht, huv, is_tip = heel_block(sd_)
@@ -452,7 +593,7 @@ def build_side(body, proxy, side, log, t0):
                           np.repeat(rig, len(hv), 0), zh, ~tip_tris))
     parts.append(sub_part("heeltip" + sd_.tag, "BootsBrass", hv, ht, huv, "patch:brass", "brass",
                           np.repeat(rig, len(hv), 0), zh, tip_tris))
-    parts += lacing(line, v, t, proxy, foot_bone, sd_.tag)
+    parts += lacing(line, v, t, proxy, foot_bone, sd_.tag, ankle)
     log("%s details %.1fs" % (sd_.tag, time.time() - t0))
     for p in parts:
         p.side = sd_.tag
@@ -467,10 +608,14 @@ def trim_lining(p, floor):
     return q
 
 
-def build(body, proxy=None, log=print):
+def build(body, proxy=None, log=print, feet_ref=None):
+    import os
+    import pickle
     import time
     t0 = time.time()
-    parts = build_side(body, proxy, -1, log, t0) + build_side(body, proxy, 1, log, t0)
+    feet_ref = feet_ref or pickle.load(open(os.path.join(r"D:\Dev\Skyrim MOD\work\hollow-lantern\ref", "feet.pkl"),
+                                            "rb"))
+    parts = build_side(body, proxy, feet_ref, -1, log, t0) + build_side(body, proxy, feet_ref, 1, log, t0)
     parts = [trim_lining(p, LINING_FLOOR) if p.name.endswith("_in") else p for p in parts]
     for p in parts:
         p.bones = list(proxy.bones)
@@ -484,7 +629,7 @@ def build(body, proxy=None, log=print):
     return parts, None
 
 
-def lacing(line, v, t, proxy, foot_bone, tag):
+def lacing(line, v, t, proxy, foot_bone, tag, ankle):
     import piece_corset
     tree = hl_blend.bvh(v, t)
     length = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(line, axis=0), axis=1))])
@@ -550,6 +695,6 @@ def lacing(line, v, t, proxy, foot_bone, tag):
                                         ("boot_lacing", cv, ct, cuv, "patch:cord", "cord"),
                                         ("boot_aglets", av, at, auv, "patch:brass", "brass")):
         mw, mD = bind(mv, mt, proxy, smooth_iters=4)
-        mw, mD = foot_blend(mv, mw, mD, foot_bone)
+        mw, mD = foot_blend(mv, mw, mD, foot_bone, ankle)
         out.append(Part(name + tag, "Boots", mv, mt, muv, isl, mat, mw, mD))
     return out

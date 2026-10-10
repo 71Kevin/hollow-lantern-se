@@ -37,14 +37,14 @@ packages and the optional body presets, see [Downloads](#downloads). Also on
 Install **one** outfit package. All three contain the same plugin, meshes and BodySlide files; only the texture size
 changes. The body presets are a separate, optional download.
 
-| Package | Textures | Download (version 1.0) |
+| Package | Textures | Download (version 1.1) |
 |---|---|---|
-| Outfit, 2K | 2048 px | [Hollow-Lantern-CBBE-3BA-2K-1.0.7z](https://github.com/71Kevin/hollow-lantern-se/releases/download/v1.0/Hollow-Lantern-CBBE-3BA-2K-1.0.7z) (57.3 MB) |
-| Outfit, 4K | 4096 px | [Hollow-Lantern-CBBE-3BA-4K-1.0.7z](https://github.com/71Kevin/hollow-lantern-se/releases/download/v1.0/Hollow-Lantern-CBBE-3BA-4K-1.0.7z) (72.5 MB) |
-| Outfit, 8K | 8192 px | [Hollow-Lantern-CBBE-3BA-8K-1.0.7z](https://github.com/71Kevin/hollow-lantern-se/releases/download/v1.0/Hollow-Lantern-CBBE-3BA-8K-1.0.7z) (128.9 MB) |
-| Body presets (optional) | — | [Hollow-Lantern-Body-Presets-CBBE-3BA-1.0.7z](https://github.com/71Kevin/hollow-lantern-se/releases/download/v1.0/Hollow-Lantern-Body-Presets-CBBE-3BA-1.0.7z) (2.3 KB) |
+| Outfit, 2K | 2048 px | [Hollow-Lantern-CBBE-3BA-2K-1.1.7z](https://github.com/71Kevin/hollow-lantern-se/releases/download/v1.1/Hollow-Lantern-CBBE-3BA-2K-1.1.7z) (57.3 MB) |
+| Outfit, 4K | 4096 px | [Hollow-Lantern-CBBE-3BA-4K-1.1.7z](https://github.com/71Kevin/hollow-lantern-se/releases/download/v1.1/Hollow-Lantern-CBBE-3BA-4K-1.1.7z) (72.6 MB) |
+| Outfit, 8K | 8192 px | [Hollow-Lantern-CBBE-3BA-8K-1.1.7z](https://github.com/71Kevin/hollow-lantern-se/releases/download/v1.1/Hollow-Lantern-CBBE-3BA-8K-1.1.7z) (129.0 MB) |
+| Body presets (optional) | — | [Hollow-Lantern-Body-Presets-CBBE-3BA-1.0.7z](https://github.com/71Kevin/hollow-lantern-se/releases/download/v1.1/Hollow-Lantern-Body-Presets-CBBE-3BA-1.0.7z) (2.3 KB) |
 
-Release notes and SHA-256 checksums: [v1.0](https://github.com/71Kevin/hollow-lantern-se/releases/tag/v1.0).
+Release notes and SHA-256 checksums: [v1.1](https://github.com/71Kevin/hollow-lantern-se/releases/tag/v1.1). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ### Texture options
 

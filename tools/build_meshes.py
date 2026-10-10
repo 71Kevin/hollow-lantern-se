@@ -326,7 +326,8 @@ def main():
     built["corset"] = corset[0]
     keep_tris, D_conf, under = corset[1], corset[3], corset[4]
     built["shorts"] = piece_shorts.build(body, proxy, log)[0]
-    built["boots"] = piece_boots.build(body, proxy, log)[0]
+    built["boots"] = piece_boots.build(body, proxy, log,
+                                       feet_ref=pickle.load(open(os.path.join(REF, "feet.pkl"), "rb")))[0]
     built["gloves"] = piece_gloves.build(body, proxy, log, hands_ref=hands_ref, skel=skel)[0]
     built["choker"] = piece_choker.build(body, proxy, log)[0]
     tail_parts, tail_fx = piece_tail.build(body, proxy, log, skel=skel)

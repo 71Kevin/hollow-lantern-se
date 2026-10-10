@@ -9,6 +9,7 @@ using Noggog;
 var skyrimPath = args[0];
 var outDir = args[1];
 using var meshReport = JsonDocument.Parse(File.ReadAllText(args[2]));
+var version = args[3];
 
 ObjectBounds Bounds(JsonElement e)
 {
@@ -33,7 +34,7 @@ FormKey Ingredient(string editorId) =>
 var mod = new SkyrimMod(modKey, release);
 mod.ModHeader.Flags |= SkyrimModHeader.HeaderFlag.Small;
 mod.ModHeader.Author = "Tinesh";
-mod.ModHeader.Description = "Hollow Lantern 1.0: a Halloween lantern-witch outfit for CBBE 3BA with a masquerade mask and enchanted lantern axes, crafted at the forge.";
+mod.ModHeader.Description = $"Hollow Lantern {version}: a Halloween lantern-witch outfit for CBBE 3BA with a masquerade mask and enchanted lantern axes, crafted at the forge.";
 
 var forge = Kw("CraftingSmithingForge");
 var armorTable = Kw("CraftingSmithingArmorTable");

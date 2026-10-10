@@ -17,7 +17,7 @@
     .\build.ps1 -Install
 #>
 param(
-    [string] $Version = "1.0",
+    [string] $Version = "1.1",
     [string] $Work = "$PSScriptRoot\cache",
     [string] $Out = "$PSScriptRoot\out",
     [string] $Packages = "$PSScriptRoot\dist",
@@ -82,7 +82,7 @@ Copy-Item "$PSScriptRoot\scripts\*.psc" $scriptSource
 if ($LASTEXITCODE) { throw "Papyrus compilation failed" }
 python "$tools\pex_anonymize.py" "$scriptOut\HollowLanternCraftScript.pex"
 
-dotnet run -c Release --project "$PSScriptRoot\plugin" -- "$Game\Data\Skyrim.esm" $data $report
+dotnet run -c Release --project "$PSScriptRoot\plugin" -- "$Game\Data\Skyrim.esm" $data $report $Version
 if ($LASTEXITCODE) { throw "Plugin generation failed" }
 
 New-Item -ItemType Directory -Force $Packages | Out-Null
